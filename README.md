@@ -37,7 +37,7 @@ myprefix.memory.swapfree 4195872768 1592300994
 - disk
 - loadavg
 - memory
-- network
+- interface
 - uptime
 - vmstat
 
