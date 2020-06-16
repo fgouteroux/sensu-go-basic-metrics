@@ -21,7 +21,7 @@ func main() {
 	memory, err := memory.Get()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
-		return
+		os.Exit(1)
 	}
 
 	metrics = append(

@@ -21,13 +21,13 @@ func main() {
 	before, err := cpu.Get()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
-		return
+		os.Exit(1)
 	}
 	time.Sleep(time.Duration(1) * time.Second)
 	after, err := cpu.Get()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
-		return
+		os.Exit(1)
 	}
 	total := float64(after.Total - before.Total)
 

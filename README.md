@@ -39,6 +39,7 @@ myprefix.memory.swapfree 4195872768 1592300994
 - memory
 - network
 - uptime
+- vmstat
 
 **Windows Metrics**
 - memory
