@@ -35,6 +35,7 @@ myprefix.memory.swapfree 4195872768 1592300994
 **Linux Metric**
 - cpu
 - disk
+- disk-usage
 - interface
 - loadavg
 - memory

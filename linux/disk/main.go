@@ -12,7 +12,7 @@ import (
 
 func contains(arr []string, str string) bool {
    for _, a := range arr {
-      if strings.HasPrefix(str, a) || a == str {
+      if (a != "" && strings.HasPrefix(str, a)) || a == str {
          return true
       }
    }
