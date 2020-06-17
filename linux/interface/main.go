@@ -44,7 +44,7 @@ func main() {
 		"fifo",
 		"colls",
 		"carrier",
-		"compressed"
+		"compressed",
 	}
 
 	for scanner.Scan() {
