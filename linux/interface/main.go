@@ -28,7 +28,24 @@ func main() {
 
 	scanner := bufio.NewScanner(file)
 
-	desc := []string{"bytes", "packets", "errs", "drop", "fifo", "frame", "compressed", "multicast", "bytes", "packets", "errs", "drop", "fifo", "colls", "carrier", "compressed"}
+	desc := []string{
+		"bytes",
+		"packets",
+		"errs",
+		"drop",
+		"fifo",
+		"frame",
+		"compressed",
+		"multicast",
+		"bytes",
+		"packets",
+		"errs",
+		"drop",
+		"fifo",
+		"colls",
+		"carrier",
+		"compressed"
+	}
 
 	for scanner.Scan() {
 		// Reference: dev_seq_printf_stats in Linux source code
