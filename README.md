@@ -35,12 +35,14 @@ myprefix.memory.swapfree 4195872768 1592300994
 **Linux Metric**
 - cpu
 - disk
+- interface
 - loadavg
 - memory
-- interface
+- netstat-tcp
 - uptime
 - vmstat
 
 **Windows Metrics**
 - memory
+- netstat-tcp
 - uptime
