@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"flag"
 	"time"
-
-	"github.com/mackerelio/go-osstat/memory"
+	"math"
+	"strings"
+	"strconv"
 )
 
 func main() {
@@ -18,24 +20,82 @@ func main() {
 	now := time.Now()
 	timestamp := now.Unix()
 
-	memory, err := memory.Get()
+	file, err := os.Open("/proc/meminfo")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		fmt.Print(err)
 		os.Exit(1)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	mem_metrics := map[string]string{
+		"MemTotal": "total",
+		"MemFree": "free",
+		"Buffers": "buffers",
+		"Cached": "cached",
+		"SwapTotal": "swapTotal",
+		"SwapFree": "swapFree",
+		"Dirty": "dirty",
+		"MemAvailable": "available",
+	}
+
+	mem_val := map[string]int{}
+
+	for scanner.Scan() {
+		kv := strings.SplitN(scanner.Text(), ":", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		name := kv[0]
+		fields := strings.Fields(kv[1])
+
+		if mname, ok := mem_metrics[name]; ok {
+			name = mname
+
+			val, err := strconv.ParseUint(fields[0], 10, 64)
+			if err != nil {
+				fmt.Errorf("failed to parse %s", name)
+			}
+			mem_val[name] = int(val)
+			metrics = append(
+				metrics,
+				fmt.Sprintf("memory.%s %d %d\n", name, val, timestamp),
+			)
+		}
+
+		if err := scanner.Err(); err != nil {
+			fmt.Errorf("scan error for /proc/meminfo: %s", err)
+		}
+	}
+
+	mem_val["swapUsed"] = mem_val["swapTotal"] - mem_val["swapFree"]
+	mem_val["used"] = mem_val["total"] - mem_val["free"]
+
+	if val, ok := mem_val["available"]; ok {
+		mem_val["usedWOBuffersCaches"] = mem_val["total"] - val
+		mem_val["freeWOBuffersCaches"] = val
+	} else {
+		mem_val["usedWOBuffersCaches"] = mem_val["used"] - (mem_val["buffers"] + mem_val["cached"])
+		mem_val["freeWOBuffersCaches"] = mem_val["free"] + (mem_val["buffers"] + mem_val["cached"])
 	}
 
 	metrics = append(
 		metrics,
-		fmt.Sprintf("memory.total %d %d\n", memory.Total, timestamp),
-		fmt.Sprintf("memory.used %d %d\n", memory.Used, timestamp),
-		fmt.Sprintf("memory.cached %d %d\n", memory.Cached, timestamp),
-		fmt.Sprintf("memory.free %d %d\n", memory.Free, timestamp),
-		fmt.Sprintf("memory.active %d %d\n", memory.Active, timestamp),
-		fmt.Sprintf("memory.inactive %d %d\n", memory.Inactive, timestamp),
-		fmt.Sprintf("memory.swaptotal %d %d\n", memory.SwapTotal, timestamp),
-		fmt.Sprintf("memory.swapused %d %d\n", memory.SwapUsed, timestamp),
-		fmt.Sprintf("memory.swapfree %d %d\n", memory.SwapFree, timestamp),
+		fmt.Sprintf("memory.swapUsed %d %d\n", mem_val["swapUsed"], timestamp),
+		fmt.Sprintf("memory.used %d %d\n", mem_val["used"], timestamp),
+		fmt.Sprintf("memory.usedWOBuffersCaches %d %d\n", mem_val["usedWOBuffersCaches"], timestamp),
+		fmt.Sprintf("memory.freeWOBuffersCaches %d %d\n", mem_val["freeWOBuffersCaches"], timestamp),
 	)
+	
+	// false is number is positive
+	if math.Signbit(float64(mem_val["swapTotal"])) == false {
+		mem_val["swapUsedPercentage"] = 100 * mem_val["swapUsed"] / mem_val["swapTotal"]
+		metrics = append(
+			metrics,
+			fmt.Sprintf("memory.swapUsedPercentage %d %d\n", mem_val["swapUsedPercentage"], timestamp),
+		)
+	}
 
 	if *scheme != "" {
 		for _, metric := range metrics {

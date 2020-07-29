@@ -26,9 +26,9 @@ func main() {
 
 	metrics = append(
 		metrics,
-		fmt.Sprintf("loadavg.1m %.2f %d\n", loadavg.Loadavg1, timestamp),
-		fmt.Sprintf("loadavg.5m %.2f %d\n", loadavg.Loadavg5, timestamp),
-		fmt.Sprintf("loadavg.15m %.2f %d\n", loadavg.Loadavg15, timestamp),
+		fmt.Sprintf("load_avg.one %.2f %d\n", loadavg.Loadavg1, timestamp),
+		fmt.Sprintf("load_avg.five %.2f %d\n", loadavg.Loadavg5, timestamp),
+		fmt.Sprintf("load_avg.fifteen %.2f %d\n", loadavg.Loadavg15, timestamp),
 	)
 
 	if *scheme != "" {

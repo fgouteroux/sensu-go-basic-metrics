@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"flag"
 	"time"
-
-	"github.com/mackerelio/go-osstat/cpu"
+	"math"
+	"strings"
+	"strconv"
 )
 
 func main() {
@@ -18,31 +20,75 @@ func main() {
 	now := time.Now()
 	timestamp := now.Unix()
 
-	before, err := cpu.Get()
+	file, err := os.Open("/proc/stat")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		fmt.Print(err)
 		os.Exit(1)
 	}
-	time.Sleep(time.Duration(1) * time.Second)
-	after, err := cpu.Get()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		os.Exit(1)
-	}
-	total := float64(after.Total - before.Total)
+	defer file.Close()
 
-	metrics = append(
-		metrics,
-		fmt.Sprintf("cpu.user %.2f %d\n", float64(after.User-before.User)/total*100, timestamp),
-		fmt.Sprintf("cpu.nice %.2f %d\n", float64(after.Nice-before.Nice)/total*100, timestamp),
-		fmt.Sprintf("cpu.system %.2f %d\n", float64(after.System-before.System)/total*100, timestamp),
-		fmt.Sprintf("cpu.idle %.2f %d\n", float64(after.Idle-before.Idle)/total*100, timestamp),
-		fmt.Sprintf("cpu.iowait %.2f %d\n", float64(after.Iowait-before.Iowait)/total*100, timestamp),
-		fmt.Sprintf("cpu.irq %.2f %d\n", float64(after.Irq-before.Irq)/total*100, timestamp),
-		fmt.Sprintf("cpu.softirq %.2f %d\n", float64(after.Softirq-before.Softirq)/total*100, timestamp),
-		fmt.Sprintf("cpu.steal %.2f %d\n", float64(after.Steal-before.Steal)/total*100, timestamp),
-		fmt.Sprintf("cpu.guest %.2f %d\n", float64(after.Guest-before.Guest)/total*100, timestamp),
-	)
+	scanner := bufio.NewScanner(file)
+
+	cpu_metrics := []string{
+		"user",
+		"nice",
+		"system",
+		"idle",
+		"iowait",
+		"irq",
+		"softirq",
+		"steal",
+		"guest",
+		"guest_nice",
+	}
+
+    cpu_count := 0
+
+	for scanner.Scan() {
+		fields := strings.Fields(scanner.Text())
+		name := fields[0]
+
+		if strings.HasPrefix(name, "cpu") {
+			cpu_count += 1
+
+			if name == "cpu" {
+				name = "total"
+			}
+
+			for i := 1; i < 10; i++ {
+				val, err := strconv.ParseUint(fields[i], 10, 64)
+				if err != nil {
+					fmt.Errorf("failed to parse %s of %s", cpu_metrics[i], name)
+				}
+				metrics = append(
+					metrics,
+					fmt.Sprintf("cpu.%s.%s %d %d\n", name, cpu_metrics[i], val, timestamp),
+				)
+			}
+		} else {
+			val, err := strconv.ParseUint(fields[1], 10, 64)
+			if err != nil {
+				fmt.Errorf("failed to parse %s", name)
+			}
+			metrics = append(
+				metrics,
+				fmt.Sprintf("cpu.%s %d %d\n", name, val, timestamp),
+			)
+		}
+
+		if err := scanner.Err(); err != nil {
+			fmt.Errorf("scan error for /proc/stat: %s", err)
+		}
+	}
+
+	// false is number is positive
+	if math.Signbit(float64(cpu_count)) == false {
+		cpu_count = cpu_count - 1
+		metrics = append(
+			metrics,
+			fmt.Sprintf("cpu.cpu_count %d %d\n", cpu_count, timestamp),
+		)
+	}
 
 	if *scheme != "" {
 		for _, metric := range metrics {
