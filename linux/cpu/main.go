@@ -58,11 +58,11 @@ func main() {
 			for i := 1; i < 10; i++ {
 				val, err := strconv.ParseUint(fields[i], 10, 64)
 				if err != nil {
-					fmt.Errorf("failed to parse %s of %s", cpu_metrics[i], name)
+					fmt.Errorf("failed to parse %s of %s", cpu_metrics[i-1], name)
 				}
 				metrics = append(
 					metrics,
-					fmt.Sprintf("cpu.%s.%s %d %d\n", name, cpu_metrics[i], val, timestamp),
+					fmt.Sprintf("cpu.%s.%s %d %d\n", name, cpu_metrics[i-1], val, timestamp),
 				)
 			}
 		} else {
