@@ -57,10 +57,10 @@ func main() {
 			if err != nil {
 				fmt.Errorf("failed to parse %s", name)
 			}
-			mem_val[name] = int(val)
+			mem_val[name] = int(val) * 1024
 			metrics = append(
 				metrics,
-				fmt.Sprintf("memory.%s %d %d\n", name, val, timestamp),
+				fmt.Sprintf("memory.%s %d %d\n", name, val * 1024, timestamp),
 			)
 		}
 
