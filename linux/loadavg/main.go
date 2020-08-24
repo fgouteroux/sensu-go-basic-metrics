@@ -5,12 +5,14 @@ import (
 	"os"
 	"flag"
 	"time"
+	"runtime"
 
 	"github.com/mackerelio/go-osstat/loadavg"
 )
 
 func main() {
 	scheme := flag.String("scheme", "", "Metric naming scheme, text to prepend to metric.")
+	percpu := flag.Bool("percpu", false, "Divide the load averages by cpu count")
 	flag.Parse()
 
 	var metrics []string
@@ -22,6 +24,13 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
+	}
+
+	if *percpu {
+		numCPU := runtime.NumCPU()
+		loadavg.Loadavg1 = loadavg.Loadavg1 / float64(numCPU)
+		loadavg.Loadavg5 = loadavg.Loadavg5 / float64(numCPU)
+		loadavg.Loadavg15 = loadavg.Loadavg15 / float64(numCPU)
 	}
 
 	metrics = append(
