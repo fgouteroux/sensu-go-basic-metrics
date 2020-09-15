@@ -6,7 +6,6 @@ import (
 	"os"
 	"flag"
 	"time"
-	"math"
 	"strings"
 	"strconv"
 )
@@ -87,9 +86,8 @@ func main() {
 		fmt.Sprintf("memory.usedWOBuffersCaches %d %d\n", mem_val["usedWOBuffersCaches"], timestamp),
 		fmt.Sprintf("memory.freeWOBuffersCaches %d %d\n", mem_val["freeWOBuffersCaches"], timestamp),
 	)
-	
-	// false is number is positive
-	if math.Signbit(float64(mem_val["swapTotal"])) == false {
+
+	if mem_val["swapTotal"] > 0 {
 		mem_val["swapUsedPercentage"] = 100 * mem_val["swapUsed"] / mem_val["swapTotal"]
 		metrics = append(
 			metrics,

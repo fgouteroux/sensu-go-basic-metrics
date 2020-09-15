@@ -6,7 +6,6 @@ import (
 	"os"
 	"flag"
 	"time"
-	"math"
 	"strings"
 	"strconv"
 )
@@ -81,8 +80,7 @@ func main() {
 		}
 	}
 
-	// false is number is positive
-	if math.Signbit(float64(cpu_count)) == false {
+	if cpu_count > 1 {
 		cpu_count = cpu_count - 1
 		metrics = append(
 			metrics,
